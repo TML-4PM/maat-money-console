@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAAT — Integrity</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0c;--surface:#111114;--surface-2:#18181c;--border:#252530;--text:#e8e8ec;--text-dim:#888898;--text-muted:#555568;--gold:#c9a84c;--gold-dim:#8a7234;--green:#34d399;--green-bg:rgba(52,211,153,.08);--green-border:rgba(52,211,153,.2);--amber:#fbbf24;--amber-bg:rgba(251,191,36,.08);--red:#f87171;--red-bg:rgba(248,113,113,.08)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.shell{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:32px 24px 64px}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:32px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(201,168,76,.15)}
+.brand h1{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;letter-spacing:.08em}
+.brand h1 span{color:var(--gold)}
+.brand-sub{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;letter-spacing:.05em;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:16px}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.4)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(52,211,153,0)}}
+.ts{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted)}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.hero-card{background:var(--surface);border-radius:12px;padding:28px 24px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s}
+.hero-card:hover{transform:translateY(-2px)}
+.hero-card.ok{border:1px solid var(--green-border)}.hero-card.ok:hover{border-color:var(--green)}
+.hero-card.ok::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);opacity:.6}
+.hero-card.bad{border:1px solid rgba(248,113,113,.2)}.hero-card.bad:hover{border-color:var(--red)}
+.hero-card.bad::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);opacity:.6}
+.hero-card .glow{position:absolute;top:-40px;right:-40px;width:120px;height:120px;pointer-events:none}
+.hero-card.ok .glow{background:radial-gradient(circle,rgba(52,211,153,.06),transparent 70%)}
+.hero-card.bad .glow{background:radial-gradient(circle,rgba(248,113,113,.06),transparent 70%)}
+.hero-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}
+.hero-value{font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:700;line-height:1;margin-bottom:8px}
+.hero-value.ok{color:var(--green)}.hero-value.bad{color:var(--red)}
+.hero-status{font-size:13px;display:flex;align-items:center;gap:6px}
+.hero-status.ok{color:var(--green)}.hero-status.bad{color:var(--red)}
+.hero-status .ck{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px}
+.hero-status.ok .ck{background:var(--green-bg);border:1px solid var(--green-border)}
+.hero-status.bad .ck{background:var(--red-bg);border:1px solid rgba(248,113,113,.2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.card-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.mr{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.mr+.mr{border-top:1px solid rgba(255,255,255,.03)}
+.ml{font-size:13px;color:var(--text-dim)}
+.mv{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:var(--text)}
+.mv.green{color:var(--green)}.mv.amber{color:var(--amber)}.mv.red{color:var(--red)}
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:32px}
+.th{padding:16px 20px;border-bottom:1px solid var(--border)}
+.th h3{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+table{width:100%;border-collapse:collapse}
+th{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+td{font-size:12px;color:var(--text-dim);padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace}
+tr:hover td{background:rgba(255,255,255,.015)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;font-family:'JetBrains Mono',monospace}
+.pill.green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.pill.amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+.pill.red{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.cf{max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.cr{display:flex;align-items:center;gap:10px;padding:8px 0}
+.cr+.cr{border-top:1px solid rgba(255,255,255,.02)}
+.ci{font-size:12px;width:20px;text-align:center}
+.cc{font-size:11px;color:var(--text-dim);flex:1}
+.ct{font-size:10px;color:var(--text-muted)}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)}
+.error-box{background:var(--red-bg);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:20px;text-align:center;color:var(--red);font-family:'JetBrains Mono',monospace;font-size:13px}
+.footer{text-align:center;padding-top:24px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.05em}
+.footer a{color:var(--gold-dim);text-decoration:none}
+@media(max-width:768px){.hero{grid-template-columns:1fr}.hero-value{font-size:40px}.header{flex-direction:column;gap:12px;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="shell"><div id="app"><div class="loading"><div class="spinner"></div><div class="loading-text">Connecting to MAAT ledger…</div></div></div></div>
+<script>
+const B='https://m5oqj21chd.execute-api.ap-southeast-2.amazonaws.com/lambda/invoke';
+const $=document.getElementById('app');
+async function sql(q){const r=await fetch(B,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({functionName:'troy-sql-executor',payload:{sql:q}})});const d=await r.json();const b=JSON.parse(d.result.body);if(b.error)throw new Error(b.error);return b.rows}
+function ft(iso){if(!iso)return'\u2014';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})}
+function fs(iso){if(!iso)return'\u2014';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}
+function hc(v,label,ok,bad){const n=v??0;const g=n===0;return'<div class="hero-card '+(g?'ok':'bad')+'"><div class="glow"></div><div class="hero-label">'+label+'</div><div class="hero-value '+(g?'ok':'bad')+'">'+n+'</div><div class="hero-status '+(g?'ok':'bad')+'"><span class="ck">'+(g?'\u2713':'!')+'</span> '+(g?ok:n+' '+bad)+'</div></div>'}
+function render(i,packs,checks,closes){
+$.innerHTML=
+'<header class="header"><div class="brand"><div class="brand-icon">\u2696\uFE0F</div><div><h1><span>MAAT</span> INTEGRITY</h1><div class="brand-sub">Tech 4 Humanity \u00B7 Financial Governance</div></div></div><div class="header-right"><div class="pulse-dot"></div><div class="ts">'+ft(new Date().toISOString())+'</div></div></header>'+
+'<section class="hero">'+
+hc(i.unbalanced,'Unbalanced Journals','All journals balanced','need attention')+
+hc(i.under_allocated,'Under-Allocated','100% allocation','lines under-allocated')+
+hc(i.missing_evidence,'Missing Evidence','Full evidence coverage','debits missing evidence')+
+'</section>'+
+'<section class="grid">'+
+'<div class="card"><div class="card-title">Reports</div>'+
+'<div class="mr"><span class="ml">Green</span><span class="mv green">'+i.reports_green+' / '+i.reports_total+'</span></div>'+
+'<div class="mr"><span class="ml">Snapshots</span><span class="mv">'+(i.snapshots||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Total Runs</span><span class="mv">'+(i.runs_total||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Check Bindings</span><span class="mv">'+(i.check_bindings||'\u2014')+'</span></div>'+
+'<div class="mr"><span class="ml">UI Bindings</span><span class="mv">'+(i.ui_bindings||'\u2014')+'</span></div></div>'+
+'<div class="card"><div class="card-title">Ledger</div>'+
+'<div class="mr"><span class="ml">Posted Lines</span><span class="mv">'+(i.posted_lines||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Real Debits</span><span class="mv">'+(i.real_debits||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Allocations</span><span class="mv">'+(i.allocations||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Evidence Links</span><span class="mv">'+(i.evidence_links||0).toLocaleString()+'</span></div>'+
+'<div class="mr"><span class="ml">Evidence Items</span><span class="mv">'+(i.evidence||0).toLocaleString()+'</span></div></div>'+
+'<div class="card"><div class="card-title">Governance</div>'+
+'<div class="mr"><span class="ml">Period Closes</span><span class="mv">'+(i.period_closes||'\u2014')+'</span></div>'+
+'<div class="mr"><span class="ml">BS Imbalanced Periods</span><span class="mv '+((i.bs_imbalanced_periods||0)>0?'amber':'green')+'">'+(i.bs_imbalanced_periods||0)+'</span></div>'+
+'<div class="mr"><span class="ml">Check Results</span><span class="mv">'+(i.check_results||'\u2014')+'</span></div>'+
+(closes.length?'<div class="mr" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span class="ml">Last Close</span><span class="mv" style="font-size:11px">'+(closes[0].close_kind||'')+' '+(closes[0].period_start?closes[0].period_start.slice(0,7):'\u2014')+'</span></div>':'')+'</div></section>'+
+'<section class="tw"><div class="th"><h3>Pack Readiness \u2014 '+packs.length+' Packs</h3></div>'+
+'<table><thead><tr><th>Pack</th><th>Kind</th><th>Items</th><th>Ready</th><th>Status</th></tr></thead><tbody>'+
+packs.map(function(p){return'<tr><td style="color:var(--text)">'+p.pack_name+'</td><td>'+p.kind+'</td><td>'+p.green_items+'/'+p.total_items+'</td><td><span class="pill '+(p.readiness_pct===100?'green':p.readiness_pct>=80?'amber':'red')+'">'+p.readiness_pct+'%</span></td><td style="color:'+(p.pack_status==='live'?'var(--green)':'var(--text-muted)')+'">'+p.pack_status+'</td></tr>'}).join('')+
+'</tbody></table></section>'+
+'<section class="grid" style="grid-template-columns:1fr"><div class="card"><div class="card-title">Recent Check Results</div><div class="cf">'+
+checks.map(function(c){return'<div class="cr"><span class="ci">'+(c.passed?'\u2705':'\u274C')+'</span><span class="cc">'+c.check_code+'</span><span class="pill '+(c.passed?'green':c.severity==='red'?'red':'amber')+'" style="font-size:9px">'+c.severity+'</span><span class="ct">'+fs(c.created_at)+'</span></div>'}).join('')+
+'</div></div></section>'+
+'<footer class="footer">MAAT Financial Governance \u00B7 Tech 4 Humanity \u00B7 Auto-refresh 60s</footer>'
+}
+async function load(){try{var results=await Promise.all([sql("SELECT rpt_snapshot_integrity()"),sql("SELECT * FROM v_rpt_pack_readiness ORDER BY pack_name"),sql("SELECT check_code, severity::text as severity, passed, details, created_at::text FROM rpt_run_check_result ORDER BY created_at DESC LIMIT 20"),sql("SELECT * FROM rpt_period_close ORDER BY period_end DESC LIMIT 6")]);var raw=results[0][0].rpt_snapshot_integrity;var i=typeof raw==='string'?JSON.parse(raw):raw;render(i,results[1],results[2],results[3])}catch(e){$.innerHTML='<div class="error-box">\u26A0 '+e.message+'<br><small>Retrying in 10s\u2026</small></div>';setTimeout(load,10000)}}
+load();setInterval(load,60000);
+</script>
+</body>
+</html>
