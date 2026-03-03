@@ -460,6 +460,80 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
+
+                {/* ── DIV 7A LOAN STATUS ── */}
+                <div className="bg-maat-card border border-amber-500/40 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[10px] font-mono text-amber-400 uppercase tracking-widest">Division 7A — Director Loan Status</h3>
+                    <Badge label="AGREEMENT REQUIRED" color="amber" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-slate-800/50 rounded p-3">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Loan Balance</div>
+                      <div className="text-xl font-bold font-mono text-white">$365,208</div>
+                      <div className="text-xs text-slate-400">T4H owes Troy</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded p-3">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">FY26 Rate</div>
+                      <div className="text-xl font-bold font-mono text-amber-400">8.37%</div>
+                      <div className="text-xs text-slate-400">ATO benchmark</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded p-3">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">FY26 Interest</div>
+                      <div className="text-xl font-bold font-mono text-white">$30,568</div>
+                      <div className="text-xs text-slate-400">$83.75/day accruing</div>
+                    </div>
+                    <div className="bg-red-900/30 border border-red-500/40 rounded p-3">
+                      <div className="text-[10px] text-red-400 uppercase tracking-wider mb-1">Min Repayment Due</div>
+                      <div className="text-xl font-bold font-mono text-red-400">$71,037</div>
+                      <div className="text-xs text-red-400">30 Jun 2026</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1 mb-3">
+                    {[
+                      { fy: "FY2024", rate: "8.27%", interest: "$30,223", myr: "$69,926", status: "CONFIRM PAYMENT", color: "amber" as const },
+                      { fy: "FY2025", rate: "8.77%", interest: "$32,029", myr: "$72,004", status: "CONFIRM PAYMENT", color: "amber" as const },
+                      { fy: "FY2026", rate: "8.37%", interest: "$30,568", myr: "$71,037", status: "DUE 30 JUN 26", color: "red" as const },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center gap-3 py-2 border-b border-maat-border last:border-0 text-sm">
+                        <span className="font-mono text-slate-400 w-14">{r.fy}</span>
+                        <span className="text-slate-400 w-12 font-mono">{r.rate}</span>
+                        <span className="text-white w-20 font-mono">{r.interest}</span>
+                        <span className="text-emerald-400 font-mono flex-1">MYR {r.myr}</span>
+                        <Badge label={r.status} color={r.color} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs text-amber-400/70 font-mono">
+                    ⚠ Execute complying loan agreement (7yr, retroactive Mar 2023). Confirm FY24+FY25 MYR paid. Unconfirmed balance = unfranked dividend at 47%.
+                  </div>
+                </div>
+
+                {/* ── R&D CONTRACTOR + FBT CLEARANCE ── */}
+                <div className="bg-maat-card border border-emerald-500/40 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">R&D Contractors + FBT Clearance</h3>
+                    <Badge label="UPDATED 3 MAR 2026" color="green" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-emerald-900/20 border border-emerald-500/30 rounded p-3">
+                      <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">R&D Clean</div>
+                      <div className="text-xl font-bold font-mono text-emerald-400">$245,500</div>
+                      <div className="text-xs text-emerald-400/70">RDTI refund ~$106,793</div>
+                    </div>
+                    <div className="bg-amber-900/20 border border-amber-500/30 rounded p-3">
+                      <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-1">Needs ABN/Invoice</div>
+                      <div className="text-xl font-bold font-mono text-amber-400">$47,000</div>
+                      <div className="text-xs text-amber-400/70">6 contractors at risk</div>
+                    </div>
+                    <div className="bg-emerald-900/20 border border-emerald-500/30 rounded p-3">
+                      <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">FBT Exposure</div>
+                      <div className="text-xl font-bold font-mono text-emerald-400">$0</div>
+                      <div className="text-xs text-emerald-400/70">Staff Benefits zeroed</div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
