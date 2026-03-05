@@ -487,7 +487,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* ── DIV 7A LOAN STATUS ── */}}
+                {/* ── DIV 7A LOAN STATUS ── */}
                 <div className="bg-maat-card border border-emerald-500/40 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">Division 7A — Director Loan</h3>
