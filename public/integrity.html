@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAAT — Integrity</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0c;--surface:#111114;--surface-2:#18181c;--border:#252530;--text:#e8e8ec;--text-dim:#888898;--text-muted:#555568;--gold:#c9a84c;--gold-dim:#8a7234;--green:#34d399;--green-bg:rgba(52,211,153,.08);--green-border:rgba(52,211,153,.2);--amber:#fbbf24;--amber-bg:rgba(251,191,36,.08);--red:#f87171;--red-bg:rgba(248,113,113,.08)}
@@ -78,48 +79,48 @@ tr:hover td{background:rgba(255,255,255,.015)}
 <div class="grain"></div>
 <div class="shell"><div id="app"><div class="loading"><div class="spinner"></div><div class="loading-text">Connecting to MAAT ledger…</div></div></div></div>
 <script>
-const B='https://m5oqj21chd.execute-api.ap-southeast-2.amazonaws.com/lambda/invoke';
+const B='/api/bridge';
 const $=document.getElementById('app');
-async function sql(q){const r=await fetch(B,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({functionName:'troy-sql-executor',payload:{sql:q}})});const d=await r.json();const b=JSON.parse(d.result.body);if(b.error)throw new Error(b.error);return b.rows}
-function ft(iso){if(!iso)return'\u2014';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})}
-function fs(iso){if(!iso)return'\u2014';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}
-function hc(v,label,ok,bad){const n=v??0;const g=n===0;return'<div class="hero-card '+(g?'ok':'bad')+'"><div class="glow"></div><div class="hero-label">'+label+'</div><div class="hero-value '+(g?'ok':'bad')+'">'+n+'</div><div class="hero-status '+(g?'ok':'bad')+'"><span class="ck">'+(g?'\u2713':'!')+'</span> '+(g?ok:n+' '+bad)+'</div></div>'}
+async function sql(q){const r=await fetch(B,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});const d=await r.json();if(d.error)throw new Error(d.error);return d.rows||[]}
+function ft(iso){if(!iso)return'—';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})}
+function fs(iso){if(!iso)return'—';return new Date(iso).toLocaleString('en-AU',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}
+function hc(v,ok,bad){const n=v??0;const g=n===0;return`<div class="hero-card ${g?'ok':'bad'}"><div class="glow"></div><div class="hero-label">${ok.split(' ')[0]} ${ok.split(' ').slice(1).join(' ')}</div><div class="hero-value ${g?'ok':'bad'}">${n}</div><div class="hero-status ${g?'ok':'bad'}"><span class="ck">${g?'✓':'!'}</span> ${g?ok:n+' '+bad}</div></div>`}
 function render(i,packs,checks,closes){
-$.innerHTML=
-'<header class="header"><div class="brand"><div class="brand-icon">\u2696\uFE0F</div><div><h1><span>MAAT</span> INTEGRITY</h1><div class="brand-sub">Tech 4 Humanity \u00B7 Financial Governance</div></div></div><div class="header-right"><div class="pulse-dot"></div><div class="ts">'+ft(new Date().toISOString())+'</div></div></header>'+
-'<section class="hero">'+
-hc(i.unbalanced,'Unbalanced Journals','All journals balanced','need attention')+
-hc(i.under_allocated,'Under-Allocated','100% allocation','lines under-allocated')+
-hc(i.missing_evidence,'Missing Evidence','Full evidence coverage','debits missing evidence')+
-'</section>'+
-'<section class="grid">'+
-'<div class="card"><div class="card-title">Reports</div>'+
-'<div class="mr"><span class="ml">Green</span><span class="mv green">'+i.reports_green+' / '+i.reports_total+'</span></div>'+
-'<div class="mr"><span class="ml">Snapshots</span><span class="mv">'+(i.snapshots||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Total Runs</span><span class="mv">'+(i.runs_total||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Check Bindings</span><span class="mv">'+(i.check_bindings||'\u2014')+'</span></div>'+
-'<div class="mr"><span class="ml">UI Bindings</span><span class="mv">'+(i.ui_bindings||'\u2014')+'</span></div></div>'+
-'<div class="card"><div class="card-title">Ledger</div>'+
-'<div class="mr"><span class="ml">Posted Lines</span><span class="mv">'+(i.posted_lines||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Real Debits</span><span class="mv">'+(i.real_debits||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Allocations</span><span class="mv">'+(i.allocations||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Evidence Links</span><span class="mv">'+(i.evidence_links||0).toLocaleString()+'</span></div>'+
-'<div class="mr"><span class="ml">Evidence Items</span><span class="mv">'+(i.evidence||0).toLocaleString()+'</span></div></div>'+
-'<div class="card"><div class="card-title">Governance</div>'+
-'<div class="mr"><span class="ml">Period Closes</span><span class="mv">'+(i.period_closes||'\u2014')+'</span></div>'+
-'<div class="mr"><span class="ml">BS Imbalanced Periods</span><span class="mv '+((i.bs_imbalanced_periods||0)>0?'amber':'green')+'">'+(i.bs_imbalanced_periods||0)+'</span></div>'+
-'<div class="mr"><span class="ml">Check Results</span><span class="mv">'+(i.check_results||'\u2014')+'</span></div>'+
-(closes.length?'<div class="mr" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span class="ml">Last Close</span><span class="mv" style="font-size:11px">'+(closes[0].close_kind||'')+' '+(closes[0].period_start?closes[0].period_start.slice(0,7):'\u2014')+'</span></div>':'')+'</div></section>'+
-'<section class="tw"><div class="th"><h3>Pack Readiness \u2014 '+packs.length+' Packs</h3></div>'+
-'<table><thead><tr><th>Pack</th><th>Kind</th><th>Items</th><th>Ready</th><th>Status</th></tr></thead><tbody>'+
-packs.map(function(p){return'<tr><td style="color:var(--text)">'+p.pack_name+'</td><td>'+p.kind+'</td><td>'+p.green_items+'/'+p.total_items+'</td><td><span class="pill '+(p.readiness_pct===100?'green':p.readiness_pct>=80?'amber':'red')+'">'+p.readiness_pct+'%</span></td><td style="color:'+(p.pack_status==='live'?'var(--green)':'var(--text-muted)')+'">'+p.pack_status+'</td></tr>'}).join('')+
-'</tbody></table></section>'+
-'<section class="grid" style="grid-template-columns:1fr"><div class="card"><div class="card-title">Recent Check Results</div><div class="cf">'+
-checks.map(function(c){return'<div class="cr"><span class="ci">'+(c.passed?'\u2705':'\u274C')+'</span><span class="cc">'+c.check_code+'</span><span class="pill '+(c.passed?'green':c.severity==='red'?'red':'amber')+'" style="font-size:9px">'+c.severity+'</span><span class="ct">'+fs(c.created_at)+'</span></div>'}).join('')+
-'</div></div></section>'+
-'<footer class="footer">MAAT Financial Governance \u00B7 Tech 4 Humanity \u00B7 Auto-refresh 60s</footer>'
-}
-async function load(){try{var results=await Promise.all([sql("SELECT rpt_snapshot_integrity()"),sql("SELECT * FROM v_rpt_pack_readiness ORDER BY pack_name"),sql("SELECT check_code, severity::text as severity, passed, details, created_at::text FROM rpt_run_check_result ORDER BY created_at DESC LIMIT 20"),sql("SELECT * FROM rpt_period_close ORDER BY period_end DESC LIMIT 6")]);var raw=results[0][0].rpt_snapshot_integrity;var i=typeof raw==='string'?JSON.parse(raw):raw;render(i,results[1],results[2],results[3])}catch(e){$.innerHTML='<div class="error-box">\u26A0 '+e.message+'<br><small>Retrying in 10s\u2026</small></div>';setTimeout(load,10000)}}
+$.innerHTML=`
+<header class="header"><div class="brand"><div class="brand-icon">⚖️</div><div><h1><span>MAAT</span> INTEGRITY</h1><div class="brand-sub">Tech 4 Humanity · Financial Governance</div></div></div><div class="header-right"><div class="pulse-dot"></div><div class="ts">${ft(new Date().toISOString())}</div></div></header>
+<section class="hero">
+${hc(i.unbalanced,'All journals balanced','need attention')}
+${hc(i.under_allocated,'100% allocation','lines under-allocated')}
+${hc(i.missing_evidence,'Full evidence coverage','debits missing evidence')}
+</section>
+<section class="grid">
+<div class="card"><div class="card-title">Reports</div>
+<div class="mr"><span class="ml">Green</span><span class="mv green">${i.reports_green} / ${i.reports_total}</span></div>
+<div class="mr"><span class="ml">Snapshots</span><span class="mv">${(i.snapshots||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Total Runs</span><span class="mv">${(i.runs_total||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Check Bindings</span><span class="mv">${i.check_bindings||'—'}</span></div>
+<div class="mr"><span class="ml">UI Bindings</span><span class="mv">${i.ui_bindings||'—'}</span></div>
+</div>
+<div class="card"><div class="card-title">Ledger</div>
+<div class="mr"><span class="ml">Posted Lines</span><span class="mv">${(i.posted_lines||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Real Debits</span><span class="mv">${(i.real_debits||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Allocations</span><span class="mv">${(i.allocations||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Evidence Links</span><span class="mv">${(i.evidence_links||0).toLocaleString()}</span></div>
+<div class="mr"><span class="ml">Evidence Items</span><span class="mv">${(i.evidence||0).toLocaleString()}</span></div>
+</div>
+<div class="card"><div class="card-title">Governance</div>
+<div class="mr"><span class="ml">Period Closes</span><span class="mv">${i.period_closes||'—'}</span></div>
+<div class="mr"><span class="ml">BS Imbalanced Periods</span><span class="mv ${(i.bs_imbalanced_periods||0)>0?'amber':'green'}">${i.bs_imbalanced_periods||0}</span></div>
+<div class="mr"><span class="ml">Check Results</span><span class="mv">${i.check_results||'—'}</span></div>
+${closes.length?`<div class="mr" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span class="ml">Last Close</span><span class="mv" style="font-size:11px">${closes[0].close_kind} ${closes[0].period_start?.slice(0,7)||'—'}</span></div>`:''}
+</div>
+</section>
+<section class="tw"><div class="th"><h3>Pack Readiness — ${packs.length} Packs</h3></div>
+<table><thead><tr><th>Pack</th><th>Kind</th><th>Items</th><th>Ready</th><th>Status</th></tr></thead>
+<tbody>${packs.map(p=>`<tr><td style="color:var(--text)">${p.pack_name}</td><td>${p.kind}</td><td>${p.green_items}/${p.total_items}</td><td><span class="pill ${p.readiness_pct===100?'green':p.readiness_pct>=80?'amber':'red'}">${p.readiness_pct}%</span></td><td style="color:${p.pack_status==='live'?'var(--green)':'var(--text-muted)'}">${p.pack_status}</td></tr>`).join('')}</tbody></table></section>
+<section class="grid" style="grid-template-columns:1fr"><div class="card"><div class="card-title">Recent Check Results</div><div class="cf">${checks.map(c=>`<div class="cr"><span class="ci">${c.passed?'✅':'❌'}</span><span class="cc">${c.check_code}</span><span class="pill ${c.passed?'green':c.severity==='red'?'red':'amber'}" style="font-size:9px">${c.severity}</span><span class="ct">${fs(c.created_at)}</span></div>`).join('')}</div></div></section>
+<footer class="footer">MAAT Financial Governance · <a href="https://tech4humanity.com.au">Tech 4 Humanity</a> · Auto-refresh 60s</footer>`}
+async function load(){try{const[s,p,c,cl]=await Promise.all([sql("SELECT rpt_snapshot_integrity()"),sql("SELECT * FROM v_rpt_pack_readiness ORDER BY pack_name"),sql("SELECT check_code, severity::text as severity, passed, details, created_at::text FROM rpt_run_check_result ORDER BY created_at DESC LIMIT 20"),sql("SELECT * FROM rpt_period_close ORDER BY period_end DESC LIMIT 6")]);const raw=s[0].rpt_snapshot_integrity;const i=typeof raw==='string'?JSON.parse(raw):raw;render(i,p,c,cl)}catch(e){$.innerHTML=`<div class="error-box">⚠ ${e.message}<br><small>Retrying in 10s…</small></div>`;setTimeout(load,10000)}}
 load();setInterval(load,60000);
 </script>
 </body>
