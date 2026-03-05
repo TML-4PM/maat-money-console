@@ -470,8 +470,8 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="bg-slate-800/50 rounded p-3">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Loan Balance</div>
-                      <div className="text-xl font-bold font-mono text-white">$365,208</div>
-                      <div className="text-xs text-slate-400">T4H owes Troy</div>
+                      <div className="text-xl font-bold font-mono text-white">$371,699</div>
+                      <div className="text-xs text-slate-400">T4H owes Troy — corrected</div>
                     </div>
                     <div className="bg-slate-800/50 rounded p-3">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">FY26 Rate</div>
@@ -480,20 +480,20 @@ export default function Dashboard() {
                     </div>
                     <div className="bg-slate-800/50 rounded p-3">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">FY26 Interest</div>
-                      <div className="text-xl font-bold font-mono text-white">$30,568</div>
-                      <div className="text-xs text-slate-400">$83.75/day accruing</div>
+                      <div className="text-xl font-bold font-mono text-white">$31,111</div>
+                      <div className="text-xs text-slate-400">$85.24/day accruing</div>
                     </div>
                     <div className="bg-red-900/30 border border-red-500/40 rounded p-3">
                       <div className="text-[10px] text-red-400 uppercase tracking-wider mb-1">Min Repayment Due</div>
-                      <div className="text-xl font-bold font-mono text-red-400">$71,037</div>
+                      <div className="text-xl font-bold font-mono text-red-400">$72,299</div>
                       <div className="text-xs text-red-400">30 Jun 2026</div>
                     </div>
                   </div>
                   <div className="space-y-1 mb-3">
                     {[
-                      { fy: "FY2024", rate: "8.27%", interest: "$30,223", myr: "$69,926", status: "CONFIRM PAYMENT", color: "amber" as const },
-                      { fy: "FY2025", rate: "8.77%", interest: "$32,029", myr: "$72,004", status: "CONFIRM PAYMENT", color: "amber" as const },
-                      { fy: "FY2026", rate: "8.37%", interest: "$30,568", myr: "$71,037", status: "DUE 30 JUN 26", color: "red" as const },
+                      { fy: "FY2024", rate: "8.27%", interest: "$30,740", myr: "$72,054", status: "CONFIRM PAYMENT", color: "amber" as const },
+                      { fy: "FY2025", rate: "8.77%", interest: "$32,598", myr: "$73,284", status: "CONFIRM PAYMENT", color: "amber" as const },
+                      { fy: "FY2026", rate: "8.37%", interest: "$31,111", myr: "$72,299", status: "DUE 30 JUN 26", color: "red" as const },
                     ].map((r, i) => (
                       <div key={i} className="flex items-center gap-3 py-2 border-b border-maat-border last:border-0 text-sm">
                         <span className="font-mono text-slate-400 w-14">{r.fy}</span>
@@ -518,13 +518,13 @@ export default function Dashboard() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-emerald-900/20 border border-emerald-500/30 rounded p-3">
                       <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">R&D Clean</div>
-                      <div className="text-xl font-bold font-mono text-emerald-400">$245,500</div>
-                      <div className="text-xs text-emerald-400/70">RDTI refund ~$106,793</div>
+                      <div className="text-xl font-bold font-mono text-emerald-400">$250,500</div>
+                      <div className="text-xs text-emerald-400/70">RDTI refund ~$109,068</div>
                     </div>
                     <div className="bg-amber-900/20 border border-amber-500/30 rounded p-3">
                       <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-1">Needs ABN/Invoice</div>
-                      <div className="text-xl font-bold font-mono text-amber-400">$47,000</div>
-                      <div className="text-xs text-amber-400/70">6 contractors at risk</div>
+                      <div className="text-xl font-bold font-mono text-amber-400">$47,500</div>
+                      <div className="text-xs text-amber-400/70">7 items at risk (6 contractor + 1 research)</div>
                     </div>
                     <div className="bg-emerald-900/20 border border-emerald-500/30 rounded p-3">
                       <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">FBT Exposure</div>
