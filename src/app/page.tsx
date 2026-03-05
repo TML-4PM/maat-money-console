@@ -461,11 +461,37 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* ── DIV 7A LOAN STATUS ── */}
-                <div className="bg-maat-card border border-amber-500/40 rounded-lg p-5">
+                {/* ── BAS LODGEMENT REQUIRED ── */}
+                <div className="bg-maat-card border border-red-500/50 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-[10px] font-mono text-amber-400 uppercase tracking-widest">Division 7A — Director Loan Status</h3>
-                    <Badge label="AGREEMENT REQUIRED" color="amber" />
+                    <h3 className="text-[10px] font-mono text-red-400 uppercase tracking-widest">BAS Lodgement — 4 Quarters Outstanding</h3>
+                    <Badge label="OVERDUE — LODGE NOW" color="red" />
+                  </div>
+                  <div className="grid grid-cols-4 gap-3 mb-3">
+                    {[
+                      { q: "Q3 FY25", period: "Jul–Sep 2024", gst: "$3,544", color: "red" as const },
+                      { q: "Q4 FY25", period: "Oct–Dec 2024", gst: "$5,468", color: "red" as const },
+                      { q: "Q1 FY25", period: "Jan–Mar 2025", gst: "$6,211", color: "red" as const },
+                      { q: "Q2 FY25", period: "Apr–Jun 2025", gst: "$7,575", color: "red" as const },
+                    ].map((q, i) => (
+                      <div key={i} className="bg-red-900/20 border border-red-500/30 rounded p-3">
+                        <div className="text-[10px] text-red-400 uppercase tracking-wider mb-1">{q.q}</div>
+                        <div className="text-lg font-bold font-mono text-white">{q.gst}</div>
+                        <div className="text-xs text-slate-400">{q.period}</div>
+                        <div className="text-[10px] text-emerald-400 mt-1">GST REFUND ↑</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs font-mono text-emerald-400">
+                    ✓ All 4 quarters in GST refund position — total ~$22,798 ATO owes T4H. Lodge to receive refund. Contact Gordon McKirdy immediately.
+                  </div>
+                </div>
+
+                {/* ── DIV 7A LOAN STATUS ── */}}
+                <div className="bg-maat-card border border-emerald-500/40 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">Division 7A — Director Loan</h3>
+                    <Badge label="AGREEMENT CONFIRMED" color="green" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="bg-slate-800/50 rounded p-3">
@@ -491,8 +517,8 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1 mb-3">
                     {[
-                      { fy: "FY2024", rate: "8.27%", interest: "$30,740", myr: "$72,054", status: "CONFIRM PAYMENT", color: "amber" as const },
-                      { fy: "FY2025", rate: "8.77%", interest: "$32,598", myr: "$73,284", status: "CONFIRM PAYMENT", color: "amber" as const },
+                      { fy: "FY2024", rate: "8.27%", interest: "$30,740", myr: "$72,054", status: "PAID CONFIRMED", color: "green" as const },
+                      { fy: "FY2025", rate: "8.77%", interest: "$32,598", myr: "$73,284", status: "PAID CONFIRMED", color: "green" as const },
                       { fy: "FY2026", rate: "8.37%", interest: "$31,111", myr: "$72,299", status: "DUE 30 JUN 26", color: "red" as const },
                     ].map((r, i) => (
                       <div key={i} className="flex items-center gap-3 py-2 border-b border-maat-border last:border-0 text-sm">
@@ -505,7 +531,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                   <div className="text-xs text-amber-400/70 font-mono">
-                    ⚠ Execute complying loan agreement (7yr, retroactive Mar 2023). Confirm FY24+FY25 MYR paid. Unconfirmed balance = unfranked dividend at 47%.
+                    ✓ Complying loan agreement confirmed. FY24 + FY25 MYR payments confirmed. FY26 MYR $72,299 due 30 Jun 2026. Daily accrual: $85.24.
                   </div>
                 </div>
 
