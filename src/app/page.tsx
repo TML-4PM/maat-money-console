@@ -44,7 +44,241 @@ function Stat({ label, value, sub, badge }: { label: string; value: string | num
 }
 
 // ── Tab definitions ──
-const TABS = ["Overview", "Transactions", "Invoices", "R&D / RDTI", "Tax", "Documents", "IP Assets", "Rules"] as const;
+const TABS = ["Overview", "Transactions", "Invoices", "R&D / RDTI", "Tax", "Documents", "IP Assets", "Rules", "Reporting"] as const;
+
+// ── Reporting Tab ──
+const SB = 'https://lzfgigiyqpuuxslsygjt.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmdpZ2l5cXB1dXhzbHN5Z2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTc0NjksImV4cCI6MjA1OTk5MzQ2OX0.qUNzDEr2rxjRSClh5P4jeDv_18_yCCkFXTizJqNYSgg';
+
+async function sbFetch(path: string) {
+  const r = await fetch(`${SB}/rest/v1/${path}`, { headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}` } });
+  return r.json();
+}
+
+function ReportingTab() {
+  const [rpt, setRpt] = useState<string>('summary');
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async (id: string) => {
+    setLoading(true); setData(null);
+    try {
+      if (id === 'summary') {
+        const [dl, interest, fbt, health, ent] = await Promise.all([
+          sbFetch('maat_transactions?select=amount,deduction_category&deduction_category=in.(Director+Loan,Director+Loan+-+Review)&amount=gt.0&limit=500'),
+          sbFetch('maat_transactions?select=amount&category=eq.Housing&raw_description=ilike.*Interest+charged*&amount=gt.100&limit=200'),
+          sbFetch('maat_transactions?select=amount,deduction_category&deduction_category=ilike.FBT*&limit=500'),
+          sbFetch('maat_transactions?select=amount&category=eq.Health&amount=gt.0&limit=200'),
+          sbFetch('maat_transactions?select=amount&deduction_category=eq.ENT-50&amount=gt.0&limit=500'),
+        ]);
+        const dlT = dl.reduce((s:number,r:any)=>s+Number(r.amount),0);
+        const intT = interest.reduce((s:number,r:any)=>s+Number(r.amount),0);
+        const homeOff = intT * 0.15;
+        const fbtT = Math.abs(fbt.reduce((s:number,r:any)=>s+Number(r.amount),0));
+        const healthT = health.reduce((s:number,r:any)=>s+Number(r.amount),0);
+        const entT = ent.reduce((s:number,r:any)=>s+Number(r.amount),0);
+        const fbtBase = fbtT + healthT;
+        const fbtByType: Record<string,number> = {};
+        for (const r of fbt) fbtByType[r.deduction_category] = (fbtByType[r.deduction_category]||0) + Math.abs(Number(r.amount));
+        if (healthT > 0) fbtByType['Health/Supplements'] = healthT;
+        setData({ dlT, intT, homeOff, div7a: Math.max(0, dlT-homeOff), fbtBase, entT, dlN: dl.length, fbtByType,
+          fbt25: Math.round(fbtBase*.6*2.0802*.47), fbt24: Math.round(fbtBase*.4*2.0802*.47) });
+      } else if (id === 'dl') {
+        const rows = await sbFetch('maat_transactions?select=posted_at,amount,vendor,subcategory,deduction_category&deduction_category=in.(Director+Loan,Director+Loan+-+Review)&amount=gt.0&order=amount.desc&limit=300');
+        const grouped: Record<string,{total:number;count:number}> = {};
+        for (const r of rows) { const k = r.subcategory||'Uncategorised'; if(!grouped[k]) grouped[k]={total:0,count:0}; grouped[k].total+=Number(r.amount); grouped[k].count++; }
+        setData({ rows, grouped, total: rows.reduce((s:number,r:any)=>s+Number(r.amount),0) });
+      } else if (id === 'fbt') {
+        const [fbt, health] = await Promise.all([
+          sbFetch('maat_transactions?select=posted_at,amount,vendor,deduction_category&deduction_category=ilike.FBT*&order=amount.desc'),
+          sbFetch('maat_transactions?select=posted_at,amount,vendor&category=eq.Health&amount=gt.0&order=amount.desc'),
+        ]);
+        const all = [...fbt.map((r:any)=>({...r,type:r.deduction_category})), ...health.map((r:any)=>({...r,type:'Health/Supplements'}))];
+        setData({ all, grand: all.reduce((s:number,r:any)=>s+Number(r.amount),0) });
+      } else if (id === 'ent') {
+        const rows = await sbFetch('maat_transactions?select=posted_at,amount,vendor,subcategory&deduction_category=eq.ENT-50&amount=gt.0&order=amount.desc&limit=300');
+        setData({ rows, total: rows.reduce((s:number,r:any)=>s+Number(r.amount),0) });
+      }
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(rpt); }, [rpt, load]);
+
+  const f = (n: number) => '$' + Math.round(n).toLocaleString('en-AU');
+  const d8 = (s: string) => s ? new Date(s).toLocaleDateString('en-AU') : '—';
+
+  const GAPS = [
+    {l:'FBT 2024 lodgement status unknown',sev:'critical',amt:'~$21K'},
+    {l:'97 unidentified card purchases — get ANZ NetBank CSV',sev:'high',amt:'$9,820'},
+    {l:'School invoices not in company name (SCECGS)',sev:'high',amt:'$21,010'},
+    {l:'Employee Benefit Agreement unsigned',sev:'high'},
+    {l:'Home office floor area % not measured',sev:'high',amt:'$47K offset at risk'},
+    {l:'Mortgage interest allocation method undecided (15% vs 70%)',sev:'medium',amt:'$313K base'},
+    {l:'$49K payments to individuals unreviewed',sev:'medium',amt:'$49,000'},
+    {l:'Travel not reconstructed from calendar',sev:'medium'},
+    {l:'FY22-23 startup costs not captured',sev:'medium'},
+    {l:'No transaction_id column (T4H-YYMM-####)',sev:'low'},
+  ];
+  const sevCls: Record<string,string> = {
+    critical:'text-red-400 bg-red-500/10 border-red-500/20',
+    high:'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    medium:'text-slate-400 bg-slate-500/8 border-slate-500/20',
+    low:'text-slate-500 bg-transparent border-slate-700/30',
+  };
+
+  const genDoc = (type: string) => {
+    if (!data && rpt !== 'summary') return;
+    const d = rpt === 'summary' ? data : null;
+    const now = new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'});
+    let content = '';
+    if (type === 'div7a' && d) {
+      const ok = d.div7a === 0;
+      content = `DIVISION 7A ASSESSMENT\nTech4Humanity Pty Ltd | ${now}\n${'═'.repeat(55)}\n\n  Director Loan:          ${f(d.dlT)}\n  Mortgage interest ×15%: (${f(d.homeOff)})\n  ${'─'.repeat(47)}\n  NET DIV 7A EXPOSURE:    ${ok ? 'NIL' : f(d.div7a)}\n\n  ${ok?'✓ NO ACTION — offset exceeds balance':'⚠ COMPLYING LOAN REQUIRED'}\n\nACTION ITEMS\n  □ Measure home office floor area %\n  □ Claim ${f(d.homeOff)} deduction (TR 93/30) in FY25 return\n  □ Resolve unidentified purchases via ANZ CSV\n\n${'─'.repeat(55)}\nPrepared by MAAT | ${new Date().toISOString()}\nDRAFT — Requires registered tax agent review\n`;
+    } else if (type === 'fbt' && d) {
+      content = `FBT RETURN WORKPAPERS\nTech4Humanity Pty Ltd | ${now}\n${'═'.repeat(55)}\n\n  FBT base: ${f(d.fbtBase)}\n  FY25 est: ${f(d.fbt25)} · FY24 est: ${f(d.fbt24)}\n  Combined: ${f(d.fbt24 + d.fbt25)}\n\n  Candor Medical: NOT hospital → Director Loan (S58M N/A)\n\nACTION ITEMS\n  □ URGENT: Confirm FBT 2024 lodgement\n  □ Execute Employee Benefit Agreement\n  □ Review S58P minor benefits (<$300)\n  □ Lodge FBT 2025 by 21 May 2025\n\n${'─'.repeat(55)}\nPrepared by MAAT | ${new Date().toISOString()}\nDRAFT — Requires registered tax agent review\n`;
+    }
+    if (!content) { alert('Load summary first'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], {type:'text/plain'}));
+    a.download = `${type === 'div7a' ? 'Div7A' : 'FBT'}_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+  };
+
+  const RPTS = [{id:'summary',label:'Overview'},{id:'dl',label:'Director Loan'},{id:'fbt',label:'FBT Benefits'},{id:'ent',label:'Entertainment'}];
+
+  return (
+    <div className="flex gap-4">
+      {/* Sidebar */}
+      <div className="w-44 shrink-0 space-y-1">
+        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 mb-2">Reports</p>
+        {RPTS.map(r => (
+          <button key={r.id} onClick={() => setRpt(r.id)} className={`w-full text-left px-3 py-2 rounded text-xs font-mono transition border ${rpt === r.id ? 'bg-maat-accent/10 border-maat-accent/30 text-maat-accent' : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-maat-border/30'}`}>{r.label}</button>
+        ))}
+        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 mb-2 mt-4">1-Touch Docs</p>
+        <button onClick={() => { setRpt('summary'); setTimeout(() => genDoc('div7a'), 800); }} className="w-full text-left px-3 py-2 rounded text-xs font-mono transition border border-maat-accent/30 text-maat-accent bg-maat-accent/5 hover:bg-maat-accent/10">↓ Div 7A Report</button>
+        <button onClick={() => { setRpt('summary'); setTimeout(() => genDoc('fbt'), 800); }} className="w-full text-left px-3 py-2 rounded text-xs font-mono transition border border-purple-500/30 text-purple-400 bg-purple-500/5 hover:bg-purple-500/10 mt-1">↓ FBT Workpapers</button>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1 min-w-0">
+        {loading && <div className="text-xs font-mono text-slate-500 py-8 text-center">⟳ loading from Supabase...</div>}
+
+        {!loading && rpt === 'summary' && data && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                {l:'Director Loan',v:f(data.dlT),s:`${data.dlN} tx`,c:'text-amber-400'},
+                {l:'Div 7A Exposure',v:data.div7a===0?'NIL':f(data.div7a),s:'after 15% offset',c:data.div7a===0?'text-emerald-400':'text-red-400'},
+                {l:'FBT ~2yr Est.',v:f(data.fbt24+data.fbt25),s:`FY24 ${f(data.fbt24)} + FY25 ${f(data.fbt25)}`,c:'text-purple-400'},
+                {l:'Entertainment',v:f(data.entT),s:'ENT-50 (50% ded.)',c:'text-blue-400'},
+              ].map((s,i)=>(
+                <div key={i} className="bg-maat-card border border-maat-border rounded-lg p-4">
+                  <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">{s.l}</p>
+                  <p className={`text-xl font-mono font-semibold ${s.c}`}>{s.v}</p>
+                  <p className="text-[11px] text-slate-500 mt-1">{s.s}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg p-4">
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-3">Div 7A Offset</p>
+              {[
+                {l:'Director Loan (personal)',v:f(data.dlT),c:'text-amber-400'},
+                {l:'Less: mortgage interest × 15% (TR 93/30)',v:`(${f(data.homeOff)})`,c:'text-emerald-400'},
+                {l:'Net Div 7A Exposure',v:data.div7a===0?'NIL':f(data.div7a),c:data.div7a===0?'text-emerald-400':'text-red-400',bold:true},
+              ].map((r,i)=>(
+                <div key={i} className={`flex justify-between font-mono text-xs py-1.5 ${r.bold?'border-t border-maat-border mt-1 pt-2 font-semibold':''}`}>
+                  <span className="text-slate-400">{r.l}</span><span className={r.c}>{r.v}</span>
+                </div>
+              ))}
+              <p className="text-[10px] text-slate-600 mt-2">Base: {f(data.intT)} mortgage interest · Basis: ATO TR 93/30</p>
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg p-4">
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-3">FBT Base by Type</p>
+              {Object.entries(data.fbtByType).sort(([,a],[,b])=>(b as number)-(a as number)).map(([t,v])=>(
+                <div key={t} className="flex items-center gap-3 mb-2">
+                  <span className="text-[11px] font-mono text-slate-400 w-48 shrink-0">{t}</span>
+                  <div className="flex-1 h-1 bg-maat-border rounded overflow-hidden"><div className="h-full bg-purple-500 rounded" style={{width:`${((v as number)/data.fbtBase*100).toFixed(1)}%`}}></div></div>
+                  <span className="text-xs font-mono text-purple-400 w-20 text-right">{f(v as number)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg p-4">
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-3">Reporting Gaps ({GAPS.length})</p>
+              {GAPS.map((g,i)=>(
+                <div key={i} className={`flex items-start gap-3 p-2.5 rounded mb-2 border text-xs ${sevCls[g.sev]}`}>
+                  <span className="font-mono font-bold uppercase text-[9px] shrink-0 mt-0.5 px-1.5 py-0.5 rounded border border-current">{g.sev}</span>
+                  <span className="flex-1">{g.l}</span>
+                  {g.amt && <span className="font-mono shrink-0">{g.amt}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!loading && rpt === 'dl' && data && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4">
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Gross Balance</p>
+                <p className="text-xl font-mono font-semibold text-amber-400">{f(data.total)}</p>
+                <p className="text-[11px] text-slate-500 mt-1">{data.rows.length} transactions</p>
+              </div>
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4">
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Net After 15% Offset</p>
+                <p className={`text-xl font-mono font-semibold ${data.total<=47052?'text-emerald-400':'text-amber-400'}`}>{data.total<=47052?'NIL':f(data.total-47052)}</p>
+                <p className="text-[11px] text-slate-500 mt-1">15% × $313,677 interest</p>
+              </div>
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg overflow-hidden">
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider p-3 pb-0">By Subcategory</p>
+              <table className="w-full text-xs mt-2">
+                <thead><tr className="border-b border-maat-border bg-[#0a1122]"><th className="text-left p-2 font-mono text-[10px] text-slate-500">Category</th><th className="text-right p-2 font-mono text-[10px] text-slate-500">Tx</th><th className="text-right p-2 font-mono text-[10px] text-slate-500">Total</th><th className="text-right p-2 font-mono text-[10px] text-slate-500">%</th></tr></thead>
+                <tbody>{Object.entries(data.grouped).sort(([,a],[,b])=>(b as any).total-(a as any).total).map(([k,v]:any,i)=>(
+                  <tr key={i} className="border-b border-maat-border/50"><td className="p-2 text-slate-300">{k}</td><td className="p-2 text-right font-mono text-slate-400">{v.count}</td><td className="p-2 text-right font-mono text-amber-400">{f(v.total)}</td><td className="p-2 text-right font-mono text-slate-500">{(v.total/data.total*100).toFixed(1)}%</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && rpt === 'fbt' && data && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4"><p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">FBT Base</p><p className="text-xl font-mono font-semibold text-purple-400">{f(Math.abs(data.grand))}</p><p className="text-[11px] text-slate-500 mt-1">{data.all.length} items</p></div>
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4"><p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Est. FBT (2yr)</p><p className="text-xl font-mono font-semibold text-red-400">{f(Math.abs(data.grand)*2.0802*.47)}</p><p className="text-[11px] text-slate-500 mt-1">2.0802 × 47%</p></div>
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4"><p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Candor Medical</p><p className="text-xl font-mono font-semibold text-emerald-400">Done</p><p className="text-[11px] text-slate-500 mt-1">→ Dir Loan. S58M N/A</p></div>
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg overflow-hidden">
+              <table className="w-full text-xs">
+                <thead><tr className="border-b border-maat-border bg-[#0a1122]"><th className="text-left p-2 font-mono text-[10px] text-slate-500">Date</th><th className="text-left p-2 font-mono text-[10px] text-slate-500">Vendor</th><th className="text-left p-2 font-mono text-[10px] text-slate-500">Type</th><th className="text-right p-2 font-mono text-[10px] text-slate-500">Amount</th></tr></thead>
+                <tbody>{data.all.map((r:any,i:number)=>(
+                  <tr key={i} className="border-b border-maat-border/50"><td className="p-2 font-mono text-slate-400">{d8(r.posted_at)}</td><td className="p-2 text-slate-300">{r.vendor||'—'}</td><td className="p-2 font-mono text-slate-500 text-[11px]">{r.type}</td><td className="p-2 text-right font-mono text-purple-400">{f(Math.abs(Number(r.amount)))}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && rpt === 'ent' && data && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4"><p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">Total</p><p className="text-xl font-mono font-semibold text-blue-400">{f(data.total)}</p><p className="text-[11px] text-slate-500 mt-1">{data.rows.length} transactions</p></div>
+              <div className="bg-maat-card border border-maat-border rounded-lg p-4"><p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2">50% Deductible</p><p className="text-xl font-mono font-semibold text-emerald-400">{f(data.total*.5)}</p><p className="text-[11px] text-slate-500 mt-1">ENT-50 treatment</p></div>
+            </div>
+            <div className="bg-maat-card border border-maat-border rounded-lg overflow-hidden">
+              <table className="w-full text-xs">
+                <thead><tr className="border-b border-maat-border bg-[#0a1122]"><th className="text-left p-2 font-mono text-[10px] text-slate-500">Date</th><th className="text-left p-2 font-mono text-[10px] text-slate-500">Vendor</th><th className="text-left p-2 font-mono text-[10px] text-slate-500">Type</th><th className="text-right p-2 font-mono text-[10px] text-slate-500">Amount</th></tr></thead>
+                <tbody>{data.rows.map((r:any,i:number)=>(
+                  <tr key={i} className="border-b border-maat-border/50"><td className="p-2 font-mono text-slate-400">{d8(r.posted_at)}</td><td className="p-2 text-slate-300">{r.vendor||'—'}</td><td className="p-2 font-mono text-slate-500 text-[11px]">{r.subcategory||'—'}</td><td className="p-2 text-right font-mono text-blue-400">{f(Number(r.amount))}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [tab, setTab] = useState<string>("Overview");
@@ -670,6 +904,8 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            {/* ── REPORTING ── */}
+            {tab === "Reporting" && <ReportingTab />}
           </>
         )}
       </main>
